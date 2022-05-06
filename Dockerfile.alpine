@@ -1,4 +1,14 @@
-FROM golang:1.14.1-alpine3.11@sha256:244a736db4a1d2611d257e7403c729663ce2eb08d4628868f9d9ef2735496659 as builder
+ARG PLATFORM=linux/arm/v7
+ARG LINUX_FLAVOUR=alpine
+ARG LINUX_VERSION=3.15
+
+FROM --platform=${PLATFORM} golang:${LINUX_FLAVOUR}${LINUX_VERSION} as builder
+
+ARG PLATFORM
+ARG LINUX_FLAVOUR
+ARG LINUX_VERSION
+
+RUN echo "Building cfssl in $LINUX_FLAVOUR $LINUX_VERSION for $PLATFORM"
 
 WORKDIR /workdir
 COPY . /workdir
@@ -11,7 +21,7 @@ RUN git clone https://github.com/cloudflare/cfssl_trust.git /etc/cfssl && \
     make bin/rice && ./bin/rice embed-go -i=./cli/serve && \
     make all
 
-FROM alpine:3.11
+FROM $LINUX_FLAVOUR:$LINUX_VERSION
 COPY --from=builder /etc/cfssl /etc/cfssl
 COPY --from=builder /workdir/bin/ /usr/bin
 
